@@ -1,0 +1,7 @@
+[tasks.build]
+description = "Build the OpenCode sandbox image"
+run = "docker build -t opencode-sandbox ."
+
+[tasks.run]
+description = "Run the OpenCode sandbox container"
+run = "docker run --rm -p 3000:3000 opencode-sandbox"
