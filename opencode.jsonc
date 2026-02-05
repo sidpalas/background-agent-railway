@@ -1,0 +1,26 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "railway": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@railway/mcp-server"
+      ],
+      "enabled": true
+    }
+  },
+  "tools": {
+    "railway_*": false
+  },
+  "agent": {
+    "railway": {
+      "description": "Manage Railway projects and services",
+      "prompt": "You are a Railway-focused agent. Use Railway MCP tools to inspect, deploy, and manage Railway resources. Confirm assumptions and avoid destructive actions unless explicitly requested.",
+      "tools": {
+        "railway_*": true
+      }
+    }
+  }
+}

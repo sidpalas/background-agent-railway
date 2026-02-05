@@ -60,3 +60,7 @@ if copy_to_clipboard <<< "$CMD"; then
   echo "(^ copied to clipboard)"
 fi
 '''
+
+[tasks.compose-up]
+description = "Run docker compose up"
+run = "docker compose up --build"

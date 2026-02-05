@@ -1,7 +1,20 @@
 [tasks.build]
 description = "Build the OpenCode sandbox image"
-run = "docker build -t opencode-sandbox ."
+run = '''
+docker build \
+  --platform linux/amd64 \
+  -t sidpalas/bg-agent-sandbox:opencode-codesever-sandbox \
+  .
+'''
+
+[tasks.push]
+description = "Push the OpenCode sandbox image to dockerhub"
+run = "docker push sidpalas/bg-agent-sandbox:opencode-codesever-sandbox"
 
 [tasks.run]
 description = "Run the OpenCode sandbox container"
-run = "docker run --rm -p 3000:3000 opencode-sandbox"
+run = "docker run --rm -p 8080:8080 sidpalas/bg-agent-sandbox:opencode-codesever-sandbox"
+
+[tasks.railway-up]
+description = "Deploy the service to railway"
+run = "railway up ../.. --path-as-root"
