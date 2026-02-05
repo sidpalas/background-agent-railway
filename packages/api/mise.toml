@@ -11,4 +11,4 @@ railway run --service Postgres -- \
 
 [tasks.railway-up]
 description = "Deploy the service to railway"
-run = "railway up ../.. --path-as-root"
+run = "railway up ../.. --path-as-root  --service api"
