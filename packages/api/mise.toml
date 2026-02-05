@@ -1,0 +1,14 @@
+[tasks.db-migrate]
+description = "Run database migrations against Docker Compose"
+run = "pnpm db:migrate"
+
+[tasks.db-migrate-railway]
+description = "Run database migrations against Railway Postgres"
+run = """
+railway run --service Postgres -- \
+  sh -c 'DATABASE_URL=\"$DATABASE_PUBLIC_URL\" pnpm db:migrate'
+"""
+
+[tasks.railway-up]
+description = "Deploy the service to railway"
+run = "railway up ../.. --path-as-root"

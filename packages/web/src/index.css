@@ -1,0 +1,329 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+:root {
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --ink: #111624;
+  --muted: #5b647a;
+  --surface: rgba(255, 255, 255, 0.9);
+  --surface-strong: #ffffff;
+  --accent: #f47c4f;
+  --accent-strong: #d05c33;
+  --sage: #cfe3d6;
+  --night: #10172a;
+  --ring: rgba(244, 124, 79, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #f8efe6 0%, #e6f0ef 45%, #d2d9f0 100%);
+  color: var(--ink);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at 20% 20%, rgba(244, 124, 79, 0.22), transparent 40%),
+    radial-gradient(circle at 80% 10%, rgba(93, 123, 194, 0.18), transparent 45%),
+    radial-gradient(circle at 40% 80%, rgba(110, 176, 155, 0.2), transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3 {
+  font-family: "Fraunces", "Times New Roman", serif;
+  margin: 0 0 0.4rem;
+  color: var(--night);
+}
+
+p {
+  margin: 0;
+  color: var(--muted);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 64px 24px 80px;
+  display: grid;
+  gap: 32px;
+}
+
+.hero {
+  padding: 32px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.72));
+  box-shadow: 0 24px 60px rgba(17, 22, 36, 0.15);
+  animation: fadeUp 0.8s ease both;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+.hero p {
+  max-width: 560px;
+  margin-top: 0.5rem;
+}
+
+.hero-card {
+  margin-top: 24px;
+  padding: 20px 24px;
+  border-radius: 20px;
+  background: var(--surface-strong);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border: 1px solid rgba(17, 22, 36, 0.08);
+}
+
+.pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  background: var(--sage);
+  color: var(--night);
+  font-weight: 600;
+}
+
+.panel {
+  background: var(--surface);
+  border-radius: 24px;
+  box-shadow: 0 30px 70px rgba(17, 22, 36, 0.2);
+  border: 1px solid rgba(17, 22, 36, 0.08);
+  animation: fadeUp 0.8s ease both;
+  animation-delay: 0.1s;
+}
+
+.panel-body {
+  padding: 32px;
+  display: grid;
+  gap: 24px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.metric {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
+  padding: 10px 16px;
+  min-width: 100px;
+  text-align: center;
+  border: 1px solid rgba(17, 22, 36, 0.08);
+}
+
+.metric span {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.metric strong {
+  font-size: 1.5rem;
+  color: var(--night);
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+.form.inline {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: end;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  font-weight: 500;
+  color: var(--night);
+}
+
+input {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(17, 22, 36, 0.15);
+  background: var(--surface-strong);
+  font-size: 1rem;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+button {
+  border: none;
+  border-radius: 999px;
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.primary {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 18px 30px rgba(244, 124, 79, 0.3);
+}
+
+.primary:hover {
+  transform: translateY(-1px);
+}
+
+.ghost {
+  background: transparent;
+  border: 1px solid rgba(17, 22, 36, 0.15);
+  color: var(--night);
+}
+
+.danger {
+  background: rgba(208, 92, 51, 0.12);
+  color: var(--accent-strong);
+}
+
+.alert {
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: rgba(208, 92, 51, 0.12);
+  color: var(--accent-strong);
+  font-weight: 500;
+}
+
+.sessions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.session-card {
+  background: var(--surface-strong);
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid rgba(17, 22, 36, 0.08);
+  animation: fadeIn 0.5s ease both;
+}
+
+.session-card h3 {
+  font-size: 1.2rem;
+}
+
+.session-card .muted {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.session-card .id {
+  font-size: 0.8rem;
+  color: rgba(17, 22, 36, 0.6);
+  word-break: break-all;
+}
+
+.empty {
+  padding: 24px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px dashed rgba(17, 22, 36, 0.12);
+}
+
+.footnote {
+  font-size: 0.85rem;
+  color: rgba(17, 22, 36, 0.6);
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  .panel-header {
+    flex-direction: column;
+  }
+
+  .form.inline {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero,
+  .panel-body {
+    padding: 24px;
+  }
+
+  .hero-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

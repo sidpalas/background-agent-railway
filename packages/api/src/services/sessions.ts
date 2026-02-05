@@ -1,0 +1,102 @@
+import { eq, desc } from "drizzle-orm";
+import { randomUUID } from "crypto";
+
+import { config } from "../config.js";
+import { db } from "../db/client.js";
+import { sessions } from "../db/schema.js";
+import { railwayRequest } from "../railway/client.js";
+import {
+  serviceCreateMutation,
+  serviceDeleteMutation,
+} from "../railway/mutations.js";
+import { HttpError } from "../utils/errors.js";
+
+type ServiceCreateResponse = {
+  serviceCreate: {
+    id: string;
+  };
+};
+
+type ServiceDeleteResponse = {
+  serviceDelete: boolean;
+};
+
+export type CreateSessionInput = {
+  name?: string;
+};
+
+const generateSessionName = () => `sandbox-${Date.now()}`;
+
+export const createSession = async ({ name }: CreateSessionInput) => {
+  const resolvedName = name?.trim() ? name.trim() : generateSessionName();
+  const data = await railwayRequest<ServiceCreateResponse>(
+    serviceCreateMutation,
+    {
+      input: {
+        projectId: config.railwayProjectId,
+        environmentId: config.railwayEnvironmentId,
+        name: resolvedName,
+        source: {
+          image: config.railwayServiceImage,
+        },
+      },
+    },
+  );
+
+  if (!data.serviceCreate?.id) {
+    throw new HttpError(502, "Railway API error: missing service id");
+  }
+
+  const id = randomUUID();
+  const now = new Date();
+
+  const [session] = await db
+    .insert(sessions)
+    .values({
+      id,
+      name: resolvedName,
+      status: "active",
+      railwayServiceId: data.serviceCreate.id,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .returning();
+
+  return session;
+};
+
+export const listSessions = async () =>
+  db.select().from(sessions).orderBy(desc(sessions.createdAt));
+
+export const getSession = async (id: string) => {
+  const [session] = await db.select().from(sessions).where(eq(sessions.id, id));
+
+  if (!session) {
+    throw new HttpError(404, "Session not found");
+  }
+
+  return session;
+};
+
+export const deleteSession = async (id: string) => {
+  const session = await getSession(id);
+
+  if (session.status === "deleted") {
+    return session;
+  }
+
+  await railwayRequest<ServiceDeleteResponse>(serviceDeleteMutation, {
+    id: session.railwayServiceId,
+  });
+
+  const [updated] = await db
+    .update(sessions)
+    .set({
+      status: "deleted",
+      updatedAt: new Date(),
+    })
+    .where(eq(sessions.id, id))
+    .returning();
+
+  return updated;
+};
