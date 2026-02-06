@@ -42,6 +42,8 @@ export const config = {
   sandboxPort: Number(process.env.SANDBOX_PORT ?? 8080),
   sandboxLocalBaseUrl: process.env.SANDBOX_LOCAL_BASE_URL,
   sandboxLocalMap: parseSandboxLocalMap(process.env.SANDBOX_LOCAL_MAP),
+  sandboxRepoUrl: process.env.SANDBOX_REPO_URL,
+  githubPersonalAccessToken: process.env.GH_TOKEN,
   localMode:
     process.env.LOCAL_MODE === "true" ||
     ((process.env.SANDBOX_LOCAL_BASE_URL || process.env.SANDBOX_LOCAL_MAP) &&

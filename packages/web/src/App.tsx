@@ -22,6 +22,31 @@ type Session = {
   updatedAt: string;
 };
 
+type RefreshOptions = {
+  showSyncIndicator?: boolean;
+};
+
+const areSessionsEqual = (next: Session[], prev: Session[]) => {
+  if (next.length !== prev.length) return false;
+
+  for (let index = 0; index < next.length; index += 1) {
+    const nextSession = next[index];
+    const prevSession = prev[index];
+
+    if (
+      nextSession.id !== prevSession.id ||
+      nextSession.updatedAt !== prevSession.updatedAt ||
+      nextSession.status !== prevSession.status ||
+      nextSession.name !== prevSession.name ||
+      nextSession.railwayServiceId !== prevSession.railwayServiceId
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 function App() {
   const [token, setToken] = useState<string | null>(() => getStoredToken());
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -29,6 +54,8 @@ function App() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [creatingCount, setCreatingCount] = useState(0);
+  const [deletingSessionIds, setDeletingSessionIds] = useState<string[]>([]);
   const [launchingSessionId, setLaunchingSessionId] = useState<string | null>(
     null,
   );
@@ -49,12 +76,17 @@ function App() {
     setError(message);
   };
 
-  const refreshSessions = useCallback(async () => {
+  const refreshSessions = useCallback(async (options: RefreshOptions = {}) => {
     if (!token) return;
-    setSyncing(true);
+    const { showSyncIndicator = true } = options;
+    if (showSyncIndicator) {
+      setSyncing(true);
+    }
     try {
       const data = await fetchSessions(token);
-      setSessions(data);
+      setSessions((currentSessions) =>
+        areSessionsEqual(data, currentSessions) ? currentSessions : data,
+      );
       setLastSyncedAt(new Date());
     } catch (error) {
       if (error instanceof Error) {
@@ -66,7 +98,9 @@ function App() {
         handleApiError(error.message);
       }
     } finally {
-      setSyncing(false);
+      if (showSyncIndicator) {
+        setSyncing(false);
+      }
     }
   }, [token]);
 
@@ -79,7 +113,7 @@ function App() {
   useEffect(() => {
     if (!token) return;
     const interval = setInterval(() => {
-      refreshSessions();
+      refreshSessions({ showSyncIndicator: false });
     }, 2000);
 
     return () => clearInterval(interval);
@@ -109,7 +143,7 @@ function App() {
     event.preventDefault();
     if (isLocalMode) return;
     if (!token) return;
-    setLoading(true);
+    setCreatingCount((count) => count + 1);
     setError(null);
     try {
       await createSession(token, name.trim() ? name.trim() : undefined);
@@ -120,13 +154,15 @@ function App() {
         handleApiError(error.message);
       }
     } finally {
-      setLoading(false);
+      setCreatingCount((count) => Math.max(0, count - 1));
     }
   };
 
   const handleDeleteSession = async (id: string) => {
     if (!token) return;
-    setLoading(true);
+    setDeletingSessionIds((current) =>
+      current.includes(id) ? current : [...current, id],
+    );
     setError(null);
     try {
       await deleteSession(token, id);
@@ -136,7 +172,7 @@ function App() {
         handleApiError(error.message);
       }
     } finally {
-      setLoading(false);
+      setDeletingSessionIds((current) => current.filter((item) => item !== id));
     }
   };
 
@@ -228,7 +264,10 @@ function App() {
               <div>
                 <h2>Session dashboard</h2>
                 <p>
-                  {syncing ? "Syncing sessions..." : "Live Railway sessions."}
+                  Live Railway sessions.
+                  <span className={`sync-indicator ${syncing ? "is-active" : ""}`}>
+                    Syncing...
+                  </span>
                 </p>
               </div>
               <div className="panel-actions">
@@ -266,9 +305,9 @@ function App() {
               <button
                 className="primary"
                 type="submit"
-                disabled={loading || isLocalMode}
+                disabled={isLocalMode}
               >
-                {loading ? "Creating..." : "Create session"}
+                {creatingCount > 0 ? "Creating..." : "Create session"}
               </button>
               <button
                 className="ghost"
@@ -319,7 +358,6 @@ function App() {
                         className="ghost"
                         onClick={() => handleLaunchSession(session)}
                         disabled={
-                          loading ||
                           session.status !== "active" ||
                           launchingSessionId === session.id
                         }
@@ -331,7 +369,10 @@ function App() {
                       <button
                         className="danger"
                         onClick={() => handleDeleteSession(session.id)}
-                        disabled={loading || session.status !== "active"}
+                        disabled={
+                          session.status === "deleted" ||
+                          deletingSessionIds.includes(session.id)
+                        }
                       >
                         Retire
                       </button>

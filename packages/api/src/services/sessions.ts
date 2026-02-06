@@ -33,17 +33,33 @@ export const createSession = async ({ name }: CreateSessionInput) => {
   }
 
   const resolvedName = name?.trim() ? name.trim() : generateSessionName();
+  const sandboxVariables: Record<string, string> = {};
+
+  if (config.sandboxRepoUrl) {
+    sandboxVariables.SANDBOX_REPO_URL = config.sandboxRepoUrl;
+  }
+
+  if (config.githubPersonalAccessToken) {
+    sandboxVariables.GH_TOKEN = config.githubPersonalAccessToken;
+  }
+
+  const serviceCreateInput: Record<string, unknown> = {
+    projectId: config.railwayProjectId,
+    environmentId: config.railwayEnvironmentId,
+    name: resolvedName,
+    source: {
+      image: config.railwayServiceImage,
+    },
+  };
+
+  if (Object.keys(sandboxVariables).length > 0) {
+    serviceCreateInput.variables = sandboxVariables;
+  }
+
   const data = await railwayRequest<ServiceCreateResponse>(
     serviceCreateMutation,
     {
-      input: {
-        projectId: config.railwayProjectId,
-        environmentId: config.railwayEnvironmentId,
-        name: resolvedName,
-        source: {
-          image: config.railwayServiceImage,
-        },
-      },
+      input: serviceCreateInput,
     },
   );
 

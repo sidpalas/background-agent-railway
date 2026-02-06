@@ -5,13 +5,6 @@ services:
       dockerfile: packages/api/Dockerfile
     env_file:
       - packages/api/.env
-    environment:
-      PORT: "3000"
-      DATABASE_URL: postgres://postgres:postgres@db:5432/railway_sessions
-      API_DIRECT_HOST: api.localhost
-      API_PROXY_HOST: proxy.localhost
-      SANDBOX_LOCAL_MAP: sandbox-a=http://sandbox-a:8080,sandbox-b=http://sandbox-b:8080
-      LOCAL_MODE: "true"
     ports:
       - "3000:3000"
     depends_on:

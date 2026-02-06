@@ -5,6 +5,7 @@ import { sessions } from "../db/schema.js";
 import { resolveSandboxHealthUrl } from "../utils/sandboxTarget.js";
 
 const HEALTH_TIMEOUT_MS = 3000;
+const STARTUP_TIMEOUT_MS = 90_000;
 const HEALTH_CHECK_STATUSES = ["starting", "active"] as const;
 
 const checkSandboxHealth = async (healthUrl: string) => {
@@ -36,14 +37,31 @@ export const pollSandboxHealth = async () => {
     .from(sessions)
     .where(inArray(sessions.status, [...HEALTH_CHECK_STATUSES]));
 
+  const now = Date.now();
+
   await Promise.all(
     candidates.map(async (session) => {
       const healthUrl = resolveSandboxHealthUrl(session.name);
       const isHealthy = await checkSandboxHealth(healthUrl);
-      const nextStatus = isHealthy ? "active" : "starting";
 
-      if (session.status !== nextStatus) {
-        await updateSessionStatus(session.id, nextStatus);
+      if (isHealthy) {
+        if (session.status !== "active") {
+          await updateSessionStatus(session.id, "active");
+        }
+        return;
+      }
+
+      if (
+        session.status === "starting" &&
+        session.createdAt &&
+        now - session.createdAt.getTime() > STARTUP_TIMEOUT_MS
+      ) {
+        await updateSessionStatus(session.id, "failed");
+        return;
+      }
+
+      if (session.status !== "starting") {
+        await updateSessionStatus(session.id, "starting");
       }
     }),
   );

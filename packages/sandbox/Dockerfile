@@ -12,10 +12,20 @@ RUN apt-get update \
     curl \
     g++ \
     git \
+    gh \
     make \
     openssh-client \
     python3 \
   && rm -rf /var/lib/apt/lists/*
+
+RUN git config --global user.name "Background Agent Bot" \
+  && git config --global user.email "background-agent-bot@users.noreply.github.com"
+
+RUN mkdir -p /root/.ssh \
+  && chmod 700 /root/.ssh \
+  && ssh-keyscan github.com >> /root/.ssh/known_hosts \
+  && printf "Host github.com\n  HostName github.com\n  User git\n  StrictHostKeyChecking yes\n  UserKnownHostsFile /root/.ssh/known_hosts\n" > /root/.ssh/config \
+  && chmod 600 /root/.ssh/config /root/.ssh/known_hosts
 
 RUN if [ "$OPENCODE_VERSION" = "latest" ]; then \
     curl -fsSL https://opencode.ai/install | bash; \
@@ -31,7 +41,12 @@ RUN if [ "${CODE_SERVER_VERSION}" = "latest" ]; then \
 
 RUN npm install -g @anthropic-ai/claude-code@"${CLAUDE_CODE_VERSION}"
 RUN npm install -g @openai/codex@"${CODEX_VERSION}"
+
+WORKDIR /home/sandbox/workspace
+
+COPY init.sh /usr/local/bin/sandbox-init.sh
+RUN chmod +x /usr/local/bin/sandbox-init.sh
   
 ENV PATH="/root/.opencode/bin:/root/.local/bin:${PATH}"
 
-ENTRYPOINT ["code-server", "--host", "0.0.0.0", "--port", "8080", "--auth", "none"]
+ENTRYPOINT ["/usr/local/bin/sandbox-init.sh"]

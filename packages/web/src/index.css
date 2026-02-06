@@ -255,6 +255,7 @@ button:disabled {
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
+  flex-wrap: wrap;
   border: 1px solid rgba(17, 22, 36, 0.08);
   animation: fadeIn 0.5s ease both;
 }
@@ -266,6 +267,21 @@ button:disabled {
 .session-card .muted {
   font-size: 0.9rem;
   color: var(--muted);
+}
+
+.sync-indicator {
+  display: inline-block;
+  margin-left: 8px;
+  min-width: 110px;
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 160ms ease, transform 160ms ease;
+  color: rgba(17, 22, 36, 0.55);
+}
+
+.sync-indicator.is-active {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .status-tag {
@@ -310,6 +326,11 @@ button:disabled {
   color: rgba(17, 22, 36, 0.6);
 }
 
+.status-failed {
+  background: rgba(220, 79, 86, 0.18);
+  color: #a4343d;
+}
+
 .session-card .id {
   font-size: 0.8rem;
   color: rgba(17, 22, 36, 0.6);
@@ -320,7 +341,14 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  align-items: flex-end;
+  align-items: stretch;
+  flex: 1 1 160px;
+}
+
+.session-actions button {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 0.9rem;
 }
 
 .empty {
