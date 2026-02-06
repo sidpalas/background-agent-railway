@@ -28,6 +28,10 @@ export type CreateSessionInput = {
 const generateSessionName = () => `sandbox-${Date.now()}`;
 
 export const createSession = async ({ name }: CreateSessionInput) => {
+  if (config.localMode) {
+    throw new HttpError(403, "Session creation disabled in local mode");
+  }
+
   const resolvedName = name?.trim() ? name.trim() : generateSessionName();
   const data = await railwayRequest<ServiceCreateResponse>(
     serviceCreateMutation,
@@ -55,7 +59,7 @@ export const createSession = async ({ name }: CreateSessionInput) => {
     .values({
       id,
       name: resolvedName,
-      status: "active",
+      status: "starting",
       railwayServiceId: data.serviceCreate.id,
       createdAt: now,
       updatedAt: now,
@@ -85,9 +89,26 @@ export const deleteSession = async (id: string) => {
     return session;
   }
 
-  await railwayRequest<ServiceDeleteResponse>(serviceDeleteMutation, {
-    id: session.railwayServiceId,
-  });
+  const [terminating] = await db
+    .update(sessions)
+    .set({
+      status: "terminating",
+      updatedAt: new Date(),
+    })
+    .where(eq(sessions.id, id))
+    .returning();
+
+  try {
+    await railwayRequest<ServiceDeleteResponse>(serviceDeleteMutation, {
+      id: session.railwayServiceId,
+    });
+  } catch (error) {
+    await db
+      .update(sessions)
+      .set({ status: session.status, updatedAt: new Date() })
+      .where(eq(sessions.id, id));
+    throw error;
+  }
 
   const [updated] = await db
     .update(sessions)

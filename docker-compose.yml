@@ -8,6 +8,10 @@ services:
     environment:
       PORT: "3000"
       DATABASE_URL: postgres://postgres:postgres@db:5432/railway_sessions
+      API_DIRECT_HOST: api.localhost
+      API_PROXY_HOST: proxy.localhost
+      SANDBOX_LOCAL_MAP: sandbox-a=http://sandbox-a:8080,sandbox-b=http://sandbox-b:8080
+      LOCAL_MODE: "true"
     ports:
       - "3000:3000"
     depends_on:
@@ -23,6 +27,20 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  sandbox-a:
+    build:
+      context: .
+      dockerfile: packages/sandbox/Dockerfile
+    ports:
+      - "8081:8080"
+
+  sandbox-b:
+    build:
+      context: .
+      dockerfile: packages/sandbox/Dockerfile
+    ports:
+      - "8082:8080"
 
 volumes:
   postgres_data:

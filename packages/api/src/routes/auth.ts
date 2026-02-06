@@ -1,8 +1,10 @@
 import { Router } from "express";
-import jwt from "jsonwebtoken";
-
 import { config } from "../config.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import {
+  authTokenExpiresInSeconds,
+  createAdminToken,
+} from "../utils/auth.js";
 import { HttpError } from "../utils/errors.js";
 
 const router = Router();
@@ -16,16 +18,9 @@ router.post(
       throw new HttpError(401, "Invalid credentials");
     }
 
-    const token = jwt.sign(
-      {
-        sub: "admin",
-        role: "admin",
-      },
-      config.authTokenSecret,
-      { expiresIn: "24h" },
-    );
+    const token = createAdminToken();
 
-    res.json({ token, expiresIn: 60 * 60 * 24 });
+    res.json({ token, expiresIn: authTokenExpiresInSeconds });
   }),
 );
 

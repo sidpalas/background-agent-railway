@@ -6,6 +6,8 @@ import {
   deleteSession,
   fetchSessions,
   getStoredToken,
+  createSandboxToken,
+  getProxyUrl,
   login,
   clearStoredToken,
   storeToken,
@@ -27,9 +29,13 @@ function App() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [launchingSessionId, setLaunchingSessionId] = useState<string | null>(
+    null,
+  );
   const [syncing, setSyncing] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
+  const isLocalMode = import.meta.env.VITE_LOCAL_MODE === "true";
 
   const hasToken = Boolean(token);
 
@@ -70,6 +76,15 @@ function App() {
     }
   }, [refreshSessions, token]);
 
+  useEffect(() => {
+    if (!token) return;
+    const interval = setInterval(() => {
+      refreshSessions();
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [refreshSessions, token]);
+
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
@@ -92,6 +107,7 @@ function App() {
     event: FormEvent<HTMLFormElement>,
   ) => {
     event.preventDefault();
+    if (isLocalMode) return;
     if (!token) return;
     setLoading(true);
     setError(null);
@@ -121,6 +137,23 @@ function App() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLaunchSession = async (session: Session) => {
+    if (!token) return;
+    setLaunchingSessionId(session.id);
+    setError(null);
+    try {
+      const sandboxToken = await createSandboxToken(token, session.id);
+      const proxyUrl = getProxyUrl(sandboxToken.token);
+      window.open(proxyUrl, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      if (error instanceof Error) {
+        handleApiError(error.message);
+      }
+    } finally {
+      setLaunchingSessionId(null);
     }
   };
 
@@ -227,9 +260,14 @@ function App() {
                   placeholder="Sandbox name (optional)"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
+                  disabled={isLocalMode}
                 />
               </label>
-              <button className="primary" type="submit" disabled={loading}>
+              <button
+                className="primary"
+                type="submit"
+                disabled={loading || isLocalMode}
+              >
                 {loading ? "Creating..." : "Create session"}
               </button>
               <button
@@ -241,6 +279,12 @@ function App() {
                 Refresh
               </button>
             </form>
+
+            {isLocalMode ? (
+              <div className="alert">
+                Session creation is disabled in local mode.
+              </div>
+            ) : null}
 
             {error ? <div className="alert">{error}</div> : null}
 
@@ -260,18 +304,38 @@ function App() {
                     <div>
                       <h3>{session.name}</h3>
                       <p className="muted">
-                        {session.status} · {" "}
+                        <span
+                          className={`status-tag status-${session.status}`}
+                        >
+                          {session.status}
+                        </span>
+                        <span> · </span>
                         {new Date(session.createdAt).toLocaleString()}
                       </p>
                       <p className="id">Service {session.railwayServiceId}</p>
                     </div>
-                    <button
-                      className="danger"
-                      onClick={() => handleDeleteSession(session.id)}
-                      disabled={loading}
-                    >
-                      Retire
-                    </button>
+                    <div className="session-actions">
+                      <button
+                        className="ghost"
+                        onClick={() => handleLaunchSession(session)}
+                        disabled={
+                          loading ||
+                          session.status !== "active" ||
+                          launchingSessionId === session.id
+                        }
+                      >
+                        {launchingSessionId === session.id
+                          ? "Launching..."
+                          : "Open sandbox"}
+                      </button>
+                      <button
+                        className="danger"
+                        onClick={() => handleDeleteSession(session.id)}
+                        disabled={loading || session.status !== "active"}
+                      >
+                        Retire
+                      </button>
+                    </div>
                   </article>
                 ))
               )}
